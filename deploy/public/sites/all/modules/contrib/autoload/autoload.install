@@ -1,0 +1,13 @@
+<?php
+
+/**
+ * @file
+ * Installation and updating tasks.
+ */
+
+/**
+ * Implements hook_modules_enabled().
+ */
+function autoload_modules_enabled() {
+  autoload_paths_recompute();
+}

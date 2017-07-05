@@ -1,0 +1,33 @@
+{
+  "name": "overtrue/phplint",
+  "description": "a php syntax check tool.",
+  "type": "library",
+  "keywords": [
+    "phplint",
+    "lint",
+    "syntax",
+    "check"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "overtrue",
+      "email": "anzhengchao@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.5.9",
+    "symfony/console": "^2.7|^3.0",
+    "symfony/finder": "^2.7|^3.0",
+    "symfony/process": "^2.7|^3.0",
+    "symfony/yaml": "^2.7|^3.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Overtrue\\PHPLint\\": "src/"
+    }
+  },
+  "bin": [
+    "bin/phplint"
+  ]
+}

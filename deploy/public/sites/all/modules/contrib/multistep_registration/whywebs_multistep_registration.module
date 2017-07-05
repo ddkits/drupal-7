@@ -1,0 +1,411 @@
+<?php
+
+function whywebs_multistep_registration_menu() {
+
+  // Top level menu item for all outsell config.
+  // @TODO: Move this into a "core" module.
+  $menu['admin/config/whywebs'] = array(
+    'title' => 'Whywebs',
+    'description' => 'Whywebs Registration',
+    'weight' => -99,
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('access administration pages'),
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+    'position' => 'left',
+  );
+
+  // Settings for authorization.
+  $menu['admin/config/whywebs/redirect'] = array(
+    'title' => 'Whywebs widget options',
+    'description' => 'Whywebs Registration module redirect after login.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('whywebs_multistep_registration_settings_form'),
+    'type' => MENU_NORMAL_ITEM,
+    'access arguments' => array('administer site configuration'),
+  );
+
+  // Settings for authorization.
+  $items['403redirect'] = array(
+    'page callback' => 'whywebs_multistep_registration_403_redirect',
+    'access callback' => 'whywebs_multistep_registration_403_access',
+    'type' => MENU_CALLBACK,
+  );
+
+  return $menu;
+}
+
+
+
+function whywebs_multistep_registration_settings_form(){
+  // Set a default text_format form field value.
+  $default_var = array('value' => '', 'format' => NULL);
+
+  // Define widget settings.
+  $form['whywebs'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Whywebs Login/Logout and registration widget options'),
+    '#weight' => 0,
+  );
+  $form['whywebs']['whywebs_after_login_redirect'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Whywebs redirect after login'),
+    '#description' => t('Whywebs redirect after login.'),
+    '#default_value' => variable_get('whywebs_after_login_redirect', FALSE),
+    '#size' => 60,
+    '#maxlength' => 255
+  );
+  $form['whywebs']['whywebs_after_logout_redirect'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Whywebs redirect after logout'),
+    '#description' => t('Whywebs redirect after logout.'),
+    '#default_value' => variable_get('whywebs_after_logout_redirect', FALSE),
+    '#size' => 60,
+    '#maxlength' => 255
+  );
+  $form['whywebs']['whywebs_registration_password_strength'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show the password strength'),
+    '#description' => t('Do you like to Show the password strength in registration form'),
+    '#default_value' => variable_get('whywebs_registration_password_strength', FALSE),
+    '#options' => array(1 => t('Show'), 0 => t('Donnot show')),
+  );
+  $form['whywebs']['whywebs_registration_description_box'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show the E-mail description box'),
+    '#description' => t('Do you like to Show the description text in registration form'),
+    '#default_value' => variable_get('whywebs_registration_description_box', FALSE),
+    '#options' => array(1 => t('Show'), 0 => t('Donnot show')),
+  );
+  $form['whywebs']['whywebs_registration_description_box_text'] = array(
+    '#type' => 'textfield',
+    '#title' => t('E-mail description box'),
+    '#description' => t('E-mail description box text'),
+    '#default_value' => variable_get('whywebs_registration_description_box_text', FALSE),
+    '#size' => 60,
+    '#maxlength' => 255
+  );
+  return system_settings_form($form);
+}
+
+
+
+function whywebs_multistep_registration_403_redirect() {
+  header('Location: '. url(variable_get('whywebs_after_logout_redirect', FALSE), array('absolute' => TRUE)), TRUE, 302);
+}
+
+function whywebs_multistep_registration_403_access() {
+  return TRUE;
+}
+
+
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function whywebs_multistep_registration_form_user_register_form_alter(&$form, &$form_state) {
+  // Make this a multi-step form.
+  if (!empty($form_state['step']) && $form_state['step'] == 2) {
+    whywebs_multistep_registration_register_alter_page_two($form, $form_state);
+  }
+  else {
+    // Otherwise we build page 1.
+    whywebs_multistep_registration_register_alter_page_one($form, $form_state);
+  }
+}
+
+function whywebs_multistep_registration_form_alter(&$form, &$form_state, $form_id) {
+
+if ($form_id == 'user_login_block' || $form_id == 'user_login') {
+   if($op =='login') {
+    $form['#action'] = whywebs_multistep_registration_user_login();
+  }
+ }
+}
+
+/**
+ * Implements hook_form_FORM_ID_user().
+ */
+function whywebs_multistep_registration_user($op, &$edit, &$account, $category = NULL) {
+  global $user;
+  switch ($op) {
+    case 'logout':
+      drupal_goto(variable_get('whywebs_after_logout_redirect', FALSE));
+     break;
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_user_login().
+ */
+function whywebs_multistep_registration_user_login() {
+  // We want to redirect user on login.
+   
+    drupal_goto(variable_get('whywebs_after_login_redirect', FALSE));
+}
+
+/**
+ * Form alter - Step 1 of user registration.
+ */
+function whywebs_multistep_registration_register_alter_page_one(&$form, &$form_state) {
+
+  // Set the step.
+  $form_state['step'] = 1;
+
+  // Add text for step 1.
+  $form['step'] = array(
+    '#markup' => '' . t('Step 1 of 2: Account information') . '',
+    '#weight' => -10,
+  );
+
+  // Hide the information for step 2.
+  $form['field_user_picture']['#access'] = FALSE;
+  $form['field_i_am_a']['#access'] = FALSE;
+  $form['field_user_type']['#access'] = FALSE;
+  $form['account']['name']['#access'] = FALSE;
+  $form['account']['pass'] = FALSE;
+
+  //page 1 system reg fields
+  $form['account']['mail']['#default_value'] = !empty($form_state['values']['mail']) ? $form_state['values']['mail'] : '';
+  if(variable_get('whywebs_registration_description_box', FALSE) != 1){
+        $form['account']['mail']['#description'] = variable_get('whywebs_registration_description_box_text', FALSE); 
+      }
+  
+
+  //fields page one 
+  $form['field_first_name'][['und']][0]['value']['#default_value'] = !empty($form_state['values']['field_first_name'][['und']][0]['value']) ? $form_state['values']['field_first_name'][['und']][0]['value'] : '';
+  $form['field_last_name'][['und']][0]['value']['#default_value'] = !empty($form_state['values']['field_last_name'][['und']][0]['value']) ? $form_state['values']['field_last_name'][['und']][0]['value'] : '';
+
+  // Add a next button.
+  $form['actions']['next'] = array(
+    '#type' => 'submit',
+    '#value' => 'Next >>',
+    '#submit' => array('whywebs_multistep_registration_register_next'),
+  );
+
+  // Remove the 'Create new account' button from step 1.
+    unset($form['actions']['submit']);
+}
+
+
+/**
+ * Form alter - Step 2 of user registration.
+ */
+function whywebs_multistep_registration_register_alter_page_two(&$form, &$form_state) {
+  // Add text for step 2.
+  $form['step'] = array(
+    '#markup' => '' . t('Step 2 of 2') . '',
+    '#weight' => -10,
+  );
+
+    // Hide the fields completed on step 1.
+  //page 1 system reg fields
+  
+  $form['account']['mail']['#default_value'] = !empty($form_state['values']['mail']) ? $form_state['values']['mail'] : '';
+
+
+  //fields from page one 
+   $form['field_first_name'][['und']][0]['value']['#default_value'] = !empty($form_state['values']['field_first_name'][['und']][0]['value']) ? $form_state['values']['field_first_name'][['und']][0]['value'] : '';
+  $form['field_last_name'][['und']][0]['value']['#default_value'] = !empty($form_state['values']['field_last_name'][['und']][0]['value']) ? $form_state['values']['field_last_name'][['und']][0]['value'] : '';
+  $form['account']['name']['#type'] = 'hidden';
+  $form['account']['name']['#value'] = $form_state['values']['field_first_name'][['und']][0]['value'] . ' ' . $form_state['values']['field_last_name'][['und']][0]['value'];
+
+  
+  // Hide the fields completed on step 1.
+  $form['uname']= array(
+    '#markup' => $form_state['values']['mail'],
+    '#value'=> $form_state['values']['mail'],
+    '#prefix' => '<br>Your Username is  ',
+    '#required' => TRUE,
+    '#attributes' => array('class' => array('username')),
+    '#default_value' => $form_state['values']['field_first_name'][['und']][0]['value'] . ' ' . $form_state['values']['field_last_name'][['und']][0]['value'],
+    '#access' => TRUE,
+    '#weight' => -9,
+  );
+
+  $form['account']['mail']['#access'] = FALSE;
+  $form['field_first_name']['#access'] = FALSE;
+  $form['field_last_name']['#access'] = FALSE;
+  $form['account']['pass']['#access'] = TRUE;
+
+  $fields = array(
+      'field_i_am_a',
+      'realname'
+    );
+    
+  foreach($fields as $field){
+    $form[$field][['und']]['#default_value'] = !empty($form_state['values'][$field]) ? $form_state['values'][$field] : '';
+  }
+
+  //extra info
+  $form['signature_settings']['signature'] = array(
+    '#type' => 'text_format',
+    '#default_value' => 'filtered_html',
+    '#format' => 'filtered_html',
+  );
+
+  $roles = array_map('check_plain', user_roles(TRUE));
+  // The disabled checkbox subelement for the 'authenticated user' role
+  // must be generated separately and added to the checkboxes element,
+  // because of a limitation in Form API not supporting a single disabled
+  // checkbox within a set of checkboxes.
+  $checkbox_authenticated = array(
+    '#type' => 'checkbox',
+    '#title' => $roles[DRUPAL_AUTHENTICATED_RID],
+    '#default_value' => TRUE,
+    '#disabled' => TRUE,
+  );
+  unset($roles[DRUPAL_AUTHENTICATED_RID]);
+  $form['account']['roles'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Roles'),
+    '#default_value' => (!$register && !empty($account->roles) ? array_keys(array_filter($account->roles)) : array()),
+    '#options' => $roles,
+    '#access' => $roles && user_access('administer permissions'),
+    DRUPAL_AUTHENTICATED_RID => $checkbox_authenticated,
+  );
+
+
+  // // Add a back button.
+  // $form['actions']['back'] = array(
+  //   '#type' => 'submit',
+  //   '#value' => t('<< Back'),
+  //   '#submit' => array('whywebs_multistep_registration_register_back'),
+  //   '#limit_validation_errors' => array(),
+  // );
+
+  // Adjust the submit button to come last.
+  $form['actions']['submit']['#weight'] = 100;
+  // Add our own validation handler.
+  $form['actions']['submit']['#validate'] = array('whywebs_multistep_registration_register_validate');
+  // Replace default submit value.
+  $form['actions']['submit']['#value'] = t('Join now');
+  // Add an additional submit handler to the whole form.
+  $form['#submit'][] = 'whywebs_multistep_registration_register_submit';
+}
+
+/**
+ * Validate handler.
+ */
+function whywebs_multistep_registration_register_validate(&$form, &$form_state) {
+if ($form['#user_category'] == 'account' || $form['#user_category'] == 'register') {
+    $account = $form['#user'];
+    // Validate new or changing username.
+    if (isset($form_state['values']['name'])) {
+      if ($error = user_validate_name($form_state['values']['name'])) {
+        form_set_error('name', $error);
+      }
+      elseif ((bool) db_select('users')->fields('users', array('uid'))->condition('uid', $account->uid, '<>')->condition('name', db_like($form_state['values']['name']), 'LIKE')->range(0, 1)->execute()->fetchField()) {
+        form_set_error('name', t('The name %name is already taken.', array('%name' => $form_state['values']['name'])));
+      }
+    }
+
+    // Trim whitespace from mail, to prevent confusing 'e-mail not valid'
+    // warnings often caused by cutting and pasting.
+    $mail = trim($form_state['values']['mail']);
+    form_set_value($form['account']['mail'], $mail, $form_state);
+
+    // Validate the e-mail address, and check if it is taken by an existing user.
+    if ($error = user_validate_mail($form_state['values']['mail'])) {
+      form_set_error('mail', $error);
+    }
+    elseif ((bool) db_select('users')->fields('users', array('uid'))->condition('uid', $account->uid, '<>')->condition('mail', db_like($form_state['values']['mail']), 'LIKE')->range(0, 1)->execute()->fetchField()) {
+      // Format error message dependent on whether the user is logged in or not.
+      if ($GLOBALS['user']->uid) {
+        form_set_error('mail', t('The e-mail address %email is already taken.', array('%email' => $form_state['values']['mail'])));
+      }
+      else {
+        form_set_error('mail', t('The e-mail address %email is already registered. <a href="@password">Have you forgotten your password?</a>', array('%email' => $form_state['values']['mail'], '@password' => url('user/password'))));
+      }
+    }
+
+    // Make sure the signature isn't longer than the size of the database field.
+    // Signatures are disabled by default, so make sure it exists first.
+    if (isset($form_state['values']['signature'])) {
+      // Move text format for user signature into 'signature_format'.
+      $form_state['values']['signature_format'] = $form_state['values']['signature']['format'];
+      // Move text value for user signature into 'signature'.
+      $form_state['values']['signature'] = $form_state['values']['signature']['value'];
+
+      $user_schema = drupal_get_schema('users');
+      if (drupal_strlen($form_state['values']['signature']) > $user_schema['fields']['signature']['length']) {
+        form_set_error('signature', t('The signature is too long: it must be %max characters or less.', array('%max' => $user_schema['fields']['signature']['length'])));
+      }
+    }
+  }
+}
+
+/**
+ * Submit handler for user registration form.
+ *
+ * Namespace collision demands underscore.
+ */
+function whywebs_multistep_registration_register_submit(&$form, &$form_state) {
+  if($form_state['values']['field_i_am_a'] == '3' || $form_state['values']['field_i_am_a'] == 'tutor' || $form_state['values']['field_i_am_a'] == 'Tutor'){
+    $role = user_role_load_by_name("Tutor");
+  }
+  if($form_state['values']['field_i_am_a'] == '2' || $form_state['values']['field_i_am_a'] == 'student' || $form_state['values']['field_i_am_a'] == 'Student'){
+    $role = user_role_load_by_name("Student");
+  }
+  
+  user_multiple_role_edit(array($user->uid), 'add_role', $role->rid);
+}
+
+  
+function whywebs_multistep_registration_realname_alter(&$realname, $account){
+  // TODO
+  // $email =  $form_state['values']['mail'];
+  // $account = user_load_by_mail($email);
+  // $realname = $form_state['values']['field_first_name'][['und']][0]['value'] . ' ' . $form_state['values']['field_last_name'][['und']][0]['value'];
+  }
+
+
+
+/**
+ * Implements hook_element_info_alter().
+ */
+function whywebs_multistep_registration_element_info_alter(&$types) {
+
+  if (isset($types['password_confirm']['#process']) && (($position = array_search('user_form_process_password_confirm', $types['password_confirm']['#process'])) !== FALSE)) {
+    if(variable_get('whywebs_registration_password_strength', FALSE) != 1){
+        unset($types['password_confirm']['#process'][$position]);
+      }
+    }
+}
+
+/**
+ * Submit handler for next button.
+ *
+ * Capture the values from page one and store them away so they can be used
+ * at final submit time.
+ */
+function whywebs_multistep_registration_register_next($form, &$form_state) {
+  // Save the page 1 values.
+  $form_state['page_values'][1] = $form_state['values'];
+
+  // Load the page 2 values.
+  if (!empty($form_state['page_values'][2])) {
+    $form_state['values'] = $form_state['page_values'][2];
+  }
+
+  // Set the step.
+  $form_state['step'] = 2;
+  // Rebuild the form.
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Submit handler for back button.
+ *
+ * Since #limit_validation_errors = array() is set, values from page 2
+ * will be discarded.
+ */
+function whywebs_multistep_registration_register_back($form, &$form_state) {
+  // Load the page 1 values.
+  $form_state['values'] = $form_state['page_values'][1];
+  // Set the step.
+  $form_state['step'] = 1;
+  // Rebuild the form.
+  $form_state['rebuild'] = TRUE;
+
+}

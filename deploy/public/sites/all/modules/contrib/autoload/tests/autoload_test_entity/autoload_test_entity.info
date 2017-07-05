@@ -1,0 +1,16 @@
+name = Autoload Entity Test
+description = Ensure that autoloading will work for controllers, provided by "entity" module.
+hidden = TRUE
+core = 7.x
+
+autoload = TRUE
+
+dependencies[] = autoload
+dependencies[] = entity
+
+; Information added by Drupal.org packaging script on 2017-06-18
+version = "7.x-1.6"
+core = "7.x"
+project = "autoload"
+datestamp = "1497793744"
+

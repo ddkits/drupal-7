@@ -1,0 +1,24 @@
+/**
+ * @file
+ * Styling for the four_column_stacked template.
+ */
+
+.four_column_stacked > .group-first {
+  width: 25%;
+  float: left; /* LTR */
+}
+
+.four_column_stacked > .group-second {
+  width: 25%;
+  float: left; /* LTR */
+}
+
+.four_column_stacked > .group-third {
+  width: 25%;
+  float: left; /* LTR */
+}
+
+.four_column_stacked > .group-fourth {
+  width: 25%;
+  float: left; /* LTR */
+}
