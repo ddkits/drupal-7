@@ -1,0 +1,15 @@
+name = Autoload Entity Test UI
+hidden = TRUE
+core = 7.x
+
+autoload = TRUE
+
+dependencies[] = autoload_test_entity
+dependencies[] = views
+
+; Information added by Drupal.org packaging script on 2017-06-18
+version = "7.x-1.6"
+core = "7.x"
+project = "autoload"
+datestamp = "1497793744"
+

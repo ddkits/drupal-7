@@ -1,0 +1,14 @@
+/**
+ * @file
+ * Display Suite Fluid Two Column 33 66 stylesheet.
+ */
+
+.ds-two-columns .ds-left {
+  float: left;
+  width: 33.3%;
+}
+
+.ds-two-columns .ds-right {
+  float: left;
+  width: 66.6%;
+}

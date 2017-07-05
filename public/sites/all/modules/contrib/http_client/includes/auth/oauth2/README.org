@@ -1,0 +1,82 @@
+
+This module implements oauth2 authentication for the [[https://drupal.org/project/http_client][http_client]]
+module, which in turn is used by the [[https://drupal.org/project/wsclient][wsclient]] module. It depends on
+the module [[https://github.com/dashohoxha/oauth2_client][oauth2_client]] for getting an access_token from the
+[[https://drupal.org/project/oauth2_server][oauth2_server]].
+
+*Note:* The modules oauth2_server and oauth2_client have conflicts
+with the module [[https://drupal.org/project/oauth2][oauth2]], so they should not be installed at the same
+time.
+
+The settings are usually defined in *hook_default_wsclient_service()*
+like this:
+#+BEGIN_EXAMPLE
+function MYMODULE_default_wsclient_service() {
+  $service = new WSClientServiceDescription();
+  $service->name = 'srv1';
+  $service->url = 'https://service.example.org/srv1';
+  $service->type = 'rest';
+  $service->settings['authentication']['oauth2'] = array(
+    'token_endpoint' => 'https://service.example.org/oauth2/token',
+    'auth_flow' => 'user-password',
+    'client_id' => 'test1',
+    'client_secret' => 'test1',
+    'username' => 'user1',
+    'password' => 'user1',
+    //'scope' => 'basic',
+    //'query_auth' => TRUE,
+  );
+  $service->operations = array(
+    . . . . . . . . . .
+  );
+  // add the service
+  $services[$service->name] = $service;
+
+  return $services;
+}
+#+END_EXAMPLE
+
+The array of oauth2 settings can have these items:
+  - token_endpoint :: something like https://server.org/oauth2/token
+  - auth_flow :: can be: server-side | client-credentials | user-password
+  - client_id :: the client ID as registered on the oauth2 server
+  - client_secret :: the client secret as registered on the oauth2 server
+  - redirect_uri :: something like https://client.org/oauth2/authorized
+  - authorization_endpoint :: like https://server.org/oauth2/authorize
+  - username :: username of resource owner on the oauth2 server
+  - password :: password of resource owner on the oauth2 server
+  - scope :: space separated list of scopes
+  - query_auth :: if TRUE, access_token will be sent on the query,
+                  otherwise on the headers
+
+Some other examples of defining oauth2 settings:
+#+BEGIN_EXAMPLE
+  // server-side flow
+  $service->settings['authentication']['oauth2'] = array(
+    'token_endpoint' => $server_url . '/oauth2/token',
+    'auth_flow' => 'server-side',
+    'client_id' => 'test1',
+    'client_secret' => 'test1',
+    'authorization_endpoint' => $server_url . '/oauth2/authorize',
+    'redirect_uri' => $client_url . '/oauth2/authorized',
+  );
+
+  // user-password flow
+  $service->settings['authentication']['oauth2'] = array(
+    'token_endpoint' => $server_url . '/oauth2/token',
+    'auth_flow' => 'user-password',
+    'client_id' => 'test1',
+    'client_secret' => 'test1',
+    'username' => 'user1',
+    'password' => 'user1',
+  );
+
+  // client-credentials flow
+  $service->settings['authentication']['oauth2'] = array(
+    'token_endpoint' => $server_url . '/oauth2/token',
+    'auth_flow' => 'client-credentials',
+    'client_id' => 'test2',
+    'client_secret' => 'test2',
+  );
+#+END_EXAMPLE
+

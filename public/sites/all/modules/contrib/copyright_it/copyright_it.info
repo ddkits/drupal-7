@@ -1,0 +1,12 @@
+name = Copyright It
+version = 1.0 
+core = 7.x 
+package = WhyWebs
+files[] = copyright_it.module 
+description = Copyright it is a module that makes it easy to copy right all your websites with one click depending on your website name Powered by <a href="http://whywebs.com">Whywebs.com</a>.
+; Information added by Drupal.org packaging script on 2017-03-17
+version = "7.x-1.x-dev"
+core = "7.x"
+project = "copyright_it"
+datestamp = "1489771703"
+

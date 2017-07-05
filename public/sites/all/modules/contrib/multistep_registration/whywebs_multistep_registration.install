@@ -1,0 +1,84 @@
+<?php
+
+function whywebs_multistep_registration_install() {
+  $t = get_t();
+ //add custom fields that needed for all modules
+ whywebs_multistep_registration_add_custom_fields();
+}
+
+
+function whywebs_multistep_registration_add_custom_fields() {
+    foreach (whywebs_multistep_registration_fields() as $field) {
+        field_create_field($field);
+    }
+    foreach (whywebs_multistep_registration_instances() as $fieldinstance) {
+        $fieldinstance['entity_type'] = 'user';
+        $fieldinstance['bundle'] = 'user';
+        field_create_instance($fieldinstance);
+    }
+}
+
+function whywebs_multistep_registration_fields() {
+// Replacement rule for the messages.
+  $t_args = get_t();
+
+	return array( 
+		'field_first_name'	=> array(
+		
+			'field_name'   => 'field_first_name',
+			'type'         => 'text',
+			'cardinality'  => 1,
+		),
+		'field_last_name'	=> array(
+		
+			'field_name'   => 'field_last_name',
+			'type'         => 'text',
+			'cardinality'  => 1,
+		),
+	);
+}
+
+
+function whywebs_multistep_registration_instances() {
+	$t = get_t();
+	return array(
+		'field_first_name'	=> array(
+			'field_name'   => 'field_first_name',
+			'label'        => $t('First name'),
+			'required'     => TRUE,
+			'widget'       => array(
+				'type'	=> 'text_textfield'
+			),
+			'weight' => -10,
+		),
+		'field_last_name'	=> array(
+		
+			'field_name'   => 'field_last_name',
+			'label'        => $t('Last name'),
+			'required'     => TRUE,
+			'widget'       => array(
+				'type'	=> 'text_textfield'
+			),
+			'weight' => -9,
+		),
+	);
+}
+
+
+
+function whywebs_multistep_registration_uninstall(){
+    whywebs_multistep_registration_fields_delete();
+    field_purge_batch(500);
+}
+
+function whywebs_multistep_registration_fields_delete() {
+    foreach (array_keys(whywebs_multistep_registration_fields()) as $field) {
+        field_delete_field($field);
+    }
+
+$instances = field_info_instances('user', 'user');
+    foreach ($instances as $instance_name => $fieldinstance) {
+        field_delete_instance($fieldinstance);
+    }
+ 
+}
